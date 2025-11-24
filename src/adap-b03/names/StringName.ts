@@ -7,65 +7,112 @@ export class StringName extends AbstractName {
     protected name: string = "";
     protected noComponents: number = 0;
 
+    /** @methodtype initialization-method */
     constructor(source: string, delimiter?: string) {
-        super();
-        throw new Error("needs implementation or deletion");
+        super(delimiter);
+        this.name = source;
+        this.noComponents = this.computeNoComponents();
     }
 
+    /** @methodtype helper-method */
+    private computeNoComponents(): number {
+        if (this.name === "") {
+            return 0;
+        }
+        
+        let count = 1;
+        let i = 0;
+        while (i < this.name.length) {
+            if (this.name[i] === ESCAPE_CHARACTER) {
+                i += 2;
+            } else if (this.name[i] === this.delimiter) {
+                count++;
+                i++;
+            } else {
+                i++;
+            }
+        }
+        return count;
+    }
+
+    /** @methodtype helper-method */
+    private parseComponents(): string[] {
+        if (this.name === "") {
+            return [];
+        }
+
+        const components: string[] = [];
+        let currentComponent = "";
+        let i = 0;
+
+        while (i < this.name.length) {
+            if (this.name[i] === ESCAPE_CHARACTER && i + 1 < this.name.length) {
+                currentComponent += this.name[i] + this.name[i + 1];
+                i += 2;
+            } else if (this.name[i] === this.delimiter) {
+                components.push(currentComponent);
+                currentComponent = "";
+                i++;
+            } else {
+                currentComponent += this.name[i];
+                i++;
+            }
+        }
+        components.push(currentComponent);
+        return components;
+    }
+
+    /** @methodtype helper-method */
+    private rebuildName(components: string[]): void {
+        this.name = components.join(this.delimiter);
+        this.noComponents = components.length;
+    }
+
+    /** @methodtype factory-method */
     public clone(): Name {
-        throw new Error("needs implementation or deletion");
+        return new StringName(this.name, this.delimiter);
     }
 
-    public asString(delimiter: string = this.delimiter): string {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public asDataString(): string {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public isEqual(other: Name): boolean {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public getHashCode(): number {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public isEmpty(): boolean {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public getDelimiterCharacter(): string {
-        throw new Error("needs implementation or deletion");
-    }
-
+    /** @methodtype get-method */
     public getNoComponents(): number {
-        throw new Error("needs implementation or deletion");
+        return this.noComponents;
     }
 
+    /** @methodtype get-method */
     public getComponent(i: number): string {
-        throw new Error("needs implementation or deletion");
+        const components = this.parseComponents();
+        return components[i];
     }
 
-    public setComponent(i: number, c: string) {
-        throw new Error("needs implementation or deletion");
+    /** @methodtype set-method */
+    public setComponent(i: number, c: string): void {
+        const components = this.parseComponents();
+        components[i] = c;
+        this.rebuildName(components);
     }
 
-    public insert(i: number, c: string) {
-        throw new Error("needs implementation or deletion");
+    /** @methodtype command-method */
+    public insert(i: number, c: string): void {
+        const components = this.parseComponents();
+        components.splice(i, 0, c);
+        this.rebuildName(components);
     }
 
-    public append(c: string) {
-        throw new Error("needs implementation or deletion");
+    /** @methodtype command-method */
+    public append(c: string): void {
+        if (this.name === "") {
+            this.name = c;
+        } else {
+            this.name += this.delimiter + c;
+        }
+        this.noComponents++;
     }
 
-    public remove(i: number) {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public concat(other: Name): void {
-        throw new Error("needs implementation or deletion");
+    /** @methodtype command-method */
+    public remove(i: number): void {
+        const components = this.parseComponents();
+        components.splice(i, 1);
+        this.rebuildName(components);
     }
 
 }
